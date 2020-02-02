@@ -2,7 +2,7 @@
 #define GAME_OF_LIFE_PRESETS_H
 
 #include <vector>
-#include "SimpleMatrix.h"
+#include "fields/SimpleMatrix.h"
 
 const auto PRESET_GLIDER = SimpleMatrix<bool>(3, 3, {
         false, true, false,

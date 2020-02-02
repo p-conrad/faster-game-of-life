@@ -11,7 +11,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -std=c++11 -march=native")
 find_package(OpenMP REQUIRED)
 find_package(FLTK REQUIRED)
 
-add_executable(game_of_life src/main.cpp src/GameField.cpp src/GameField.h src/Presets.h src/SimpleMatrix.h src/GameWidget.h src/FieldBenchmark.cpp src/FieldBenchmark.h)
+add_executable(game_of_life src/main.cpp src/fields/GameField.cpp src/fields/GameField.h src/Presets.h src/fields/SimpleMatrix.h src/GameWidget.h src/FieldBenchmark.cpp src/FieldBenchmark.h)
 
 target_link_libraries(game_of_life PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(game_of_life PUBLIC fltk)

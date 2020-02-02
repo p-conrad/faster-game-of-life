@@ -3,7 +3,7 @@
 
 
 #include <fstream>
-#include "GameField.h"
+#include "fields/GameField.h"
 
 class FieldBenchmark {
     GameField field;

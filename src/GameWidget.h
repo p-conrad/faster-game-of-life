@@ -5,7 +5,7 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <utility>
-#include "GameField.h"
+#include "fields/GameField.h"
 
 class GameWidget : public Fl_Box {
     GameField field;
