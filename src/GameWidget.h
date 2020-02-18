@@ -5,16 +5,19 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <utility>
+#include <iostream>
 #include "GameField.h"
 
 class GameWidget : public Fl_Box {
     GameField field;
+    char *generationStr = static_cast<char *>(malloc(30));
     bool running = false;
 
     void drawNext() {
         if (!running) return;
         field.nextGeneration();
         redraw();
+        writeGenerations();
     }
 
     void draw() override {
@@ -52,14 +55,28 @@ class GameWidget : public Fl_Box {
         Fl::repeat_timeout(1.0 / 30.0, Timer_CB, userdata);
     }
 
+    inline void writeGenerations() {
+        sprintf(generationStr, "Current Generation: %d", field.getCurrentGen());
+        std::cout << "String: " << generationStr << std::endl;
+    }
+
 public:
     GameWidget(int x, int y, int w, int h, const char *l, GameField field) :
             Fl_Box(x, y, w, h, l),
             field(std::move(field)) {
         box(FL_FLAT_BOX);
         color(FL_BLACK);
+        sprintf(generationStr, "(Press space to start/stop)");
         redraw();
         Fl::add_timeout(1.0 / 30.0, Timer_CB, (void*) this);
+    }
+
+    ~GameWidget() override {
+        free(generationStr);
+    }
+
+    char *getGenerationStr() const {
+        return generationStr;
     }
 };
 
