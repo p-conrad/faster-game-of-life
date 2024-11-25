@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <omp.h>
 #include "GameField.h"
 #include "accessors.h"
 #include "Pattern.h"
@@ -58,7 +59,16 @@ void GameField::setCentered(const Pattern &pattern) {
 }
 
 int GameField::nextGeneration() {
-    for (int row = 0; row < rows; row++) {
+#pragma omp parallel
+  {
+    const int num_threads = omp_get_num_threads();
+    const int thread_id = omp_get_thread_num();
+    const double rows_per_thread = rows / num_threads;
+
+    const int start = static_cast<int>(rows_per_thread * thread_id);
+    const int end = static_cast<int>(rows_per_thread * (thread_id + 1));
+
+    for (int row = start; row < end; row++) {
         for (int column = 0; column < columns; column++) {
             uint_fast8_t value = get(frontField, columns, row, column);
             if (!value) continue;
@@ -75,6 +85,7 @@ int GameField::nextGeneration() {
             }
         }
     }
+  }
     frontField = backField;
 
     return ++currentGen;
