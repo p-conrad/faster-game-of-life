@@ -102,7 +102,6 @@ Pattern readRLE(const std::string &filename) {
 
     Pattern result;
     std::string line;
-    int columns = 0, rows = 0;
 
     // read file until we arrived at the header containing dimensions and rules
     while (getline(infile, line)) {
