@@ -63,10 +63,17 @@ int GameField::nextGeneration() {
   {
     const int num_threads = omp_get_num_threads();
     const int thread_id = omp_get_thread_num();
-    const double rows_per_thread = rows / num_threads;
 
-    const int start = static_cast<int>(rows_per_thread * thread_id);
-    const int end = static_cast<int>(rows_per_thread * (thread_id + 1));
+    int start, end;
+    if (num_threads >= rows) {
+        start = thread_id;
+        end = thread_id + 1;
+    } else {
+        const double rows_per_thread = static_cast<double>(rows) / num_threads;
+        start = static_cast<int>(rows_per_thread * thread_id);
+        end = static_cast<int>(rows_per_thread * (thread_id + 1));
+    }
+
 
     for (int row = start; row < end; row++) {
         for (int column = 0; column < columns; column++) {
