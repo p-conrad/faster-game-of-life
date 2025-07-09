@@ -8,7 +8,8 @@
 GameField::GameField(int rows, int columns) :
         rows(rows),
         columns(columns),
-        frontField(rows * columns),
+        size(rows * columns),
+        frontField(size),
         backField(frontField) {}
 
 int GameField::getRows() const {
@@ -56,6 +57,75 @@ void GameField::setCentered(const Pattern &pattern) {
         }
     }
     frontField = backField;
+}
+
+int GameField::nextGeneration_raw() {
+#pragma omp parallel
+  {
+    const int num_threads = omp_get_num_threads();
+    const int thread_id = omp_get_thread_num();
+
+    int start, end;
+    if (num_threads >= size) {
+        start = thread_id;
+        end = thread_id + 1;
+    } else {
+        const double cells_per_thread = static_cast<double>(size) / num_threads;
+        start = static_cast<int>(cells_per_thread * thread_id);
+        end = static_cast<int>(cells_per_thread * (thread_id + 1));
+    }
+
+    int index = start;
+    int next_sum = start;
+    const int cells_per_sum = 256 / sizeof(uint_fast8_t);
+
+    while (index < end) {
+        if (index == next_sum) {
+            int vec_sum = 0;
+            int sum_to = index + cells_per_sum;
+            if (sum_to > size) {
+                sum_to = size;
+            }
+#pragma omp simd reduction (+:vec_sum)
+                for (int i = index; i < sum_to; i++) {
+                    vec_sum += frontField[i];
+                }
+
+            if (vec_sum == 0) {
+                // we can skip over all these cells and repeat the process
+                index += cells_per_sum;
+                next_sum = index;
+                continue;
+            }
+        }
+
+        uint_fast8_t value = frontField[index];
+        if (!value) {
+            index += 1;
+            continue;
+        }
+        uint_fast8_t alive = value & 1u;
+        int neighbors = value >> 1u;
+        if (alive) {
+            if (neighbors != 2 && neighbors != 3) {
+                //disable and decrease neighbors
+                backField[index] &= ~1u;
+                addToNeighbors_raw(index, -2);
+            }
+        } else if (neighbors == 3) {
+            //enable and increase neighbors
+            backField[index] |= 1u;
+            addToNeighbors_raw(index, 2);
+        }
+
+        // we found something, so we can try summing again
+        index += 1;
+        next_sum = index;
+    }
+  }
+
+    frontField = backField;
+    return ++currentGen;
 }
 
 int GameField::nextGeneration() {
@@ -115,6 +185,44 @@ void GameField::increaseNeighbors(int row, int column) {
 
 void GameField::decreaseNeighbors(int row, int column) {
     addToNeighbors(row, column, -2);
+}
+
+void GameField::addToNeighbors_raw(int index, uint_fast8_t value) {
+    int dAbove, dBelow, dLeft, dRight;
+
+    if (index < columns) {
+        // we are on the first row
+        dAbove = size - index - index;
+    } else {
+        dAbove = -columns;
+    }
+    if (index % columns == 0) {
+        // we are on the left column
+        dLeft = columns - 1;
+    } else {
+        dLeft = -1;
+    }
+    if (index >= (size - columns)) {
+        // we are on the bottom row
+        dBelow = -(size - index - index);
+    } else {
+        dBelow = columns;
+    }
+    if ((index + 1) % columns == 0) {
+        // we are on the right column
+        dRight = -(columns - 1);
+    } else {
+        dRight = 1;
+    }
+
+    backField[index + dAbove + dLeft] += value;
+    backField[index + dAbove] += value;
+    backField[index + dAbove + dRight] += value;
+    backField[index + dLeft] += value;
+    backField[index + dRight] += value;
+    backField[index + dBelow + dLeft] += value;
+    backField[index + dBelow] += value;
+    backField[index + dBelow + dRight] += value;
 }
 
 void GameField::addToNeighbors(int row, int column, uint_fast8_t value) {

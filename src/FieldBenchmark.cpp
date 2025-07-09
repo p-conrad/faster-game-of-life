@@ -15,7 +15,7 @@ void FieldBenchmark::run(int generations, int frequency) {
 
     while (field.getIterations() <= generations) {
         auto start_time = omp_get_wtime();
-        field.nextGeneration();
+        field.nextGeneration_raw();
         auto run_time = omp_get_wtime() - start_time;
         sum_of_run_times += run_time;
 

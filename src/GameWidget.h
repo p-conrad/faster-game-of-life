@@ -13,7 +13,7 @@ class GameWidget : public Fl_Box {
 
     void drawNext() {
         if (!running) return;
-        field.nextGeneration();
+        field.nextGeneration_raw();
         redraw();
     }
 

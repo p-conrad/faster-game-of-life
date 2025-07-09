@@ -10,6 +10,7 @@
 class GameField {
     int rows;
     int columns;
+    int size;
     int currentGen = 1;
     std::vector<uint_fast8_t> frontField; // read only
     std::vector<uint_fast8_t> backField; // write only
@@ -39,9 +40,13 @@ public:
 
     void setCentered(const Pattern &pattern);
 
+    int nextGeneration_raw();
+
     int nextGeneration();
 
     void print() const;
+
+    void addToNeighbors_raw(int index, uint_fast8_t value);
 };
 
 
